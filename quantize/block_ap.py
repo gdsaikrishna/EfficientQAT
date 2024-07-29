@@ -330,6 +330,10 @@ def block_ap(
                 zeros = zeros.view(dim0,-1).transpose(0,1).contiguous()
                 q_linear = int_linear_real.QuantLinear(w_bits, group_size, module.in_features,module.out_features,not module.bias is None)
                 q_linear.pack(module.cpu(),  scales.float().cpu(), zeros.float().cpu())
+                torch.save(q_linear.qweight, "qweight.pt")
+                torch.save(q_linear.qzeros,"qzeros.pt")
+                torch.save(q_linear.scales,"scales.pt")
+                torch.save(q_linear.g_idx,"g_idx.pt")
                 set_op_by_name(qlayer, name, q_linear)       
                 logger.info(f"pack quantized {name} finished")
                 del module        
