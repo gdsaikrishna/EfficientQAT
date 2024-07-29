@@ -1,0 +1,14 @@
+CUDA_VISIBLE_DEVICES=0 python main_block_ap.py \
+--model /auto/regrt/sw/dgundimeda/qwen_models/qwen2_7b_llamafied  \
+--output_dir ./output/block_ap_log/Qwen-1.5-7b-llama-w3g64_w2g64_gen \
+--net Llama-2 \
+--wbits 3 \
+--group_size 64 \
+--quant_lr 1e-4 \
+--weight_lr 1e-5 \
+--train_size 1024 \
+--calib_dataset generated \
+--real_quant \
+--eval_ppl \
+--eval_tasks ceval-valid \
+--save_quant_dir ./output/block_ap_models/Qwen-1.5-7b-llama-w3g64_w2g64_gen

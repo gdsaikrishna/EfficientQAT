@@ -15,10 +15,10 @@ def get_wikitext2(tokenizer, train_size, val_size, seed, seqlen, test_only):
     traindata = load_dataset('wikitext', 'wikitext-2-raw-v1', split='train')
     testdata = load_dataset('wikitext', 'wikitext-2-raw-v1', split='test')
 
-    testenc = tokenizer("\n\n".join(testdata['text']), return_tensors='pt')
+    testenc = tokenizer("\n\n".join(testdata['text']), return_tensors='pt',trust_remote_code=True)
     if test_only:
         return testenc
-    trainenc = tokenizer("\n\n".join(traindata['text']), return_tensors='pt')
+    trainenc = tokenizer("\n\n".join(traindata['text']), return_tensors='pt',trust_remote_code=True)
 
     
     random.seed(seed)
@@ -70,7 +70,7 @@ def get_c4(tokenizer, train_size, val_size, seed, seqlen, test_only):
     for _ in range(256):
         while True:
             i = random.randint(0, len(valdata) - 1)
-            tmp = tokenizer(valdata[i]['text'], return_tensors='pt')
+            tmp = tokenizer(valdata[i]['text'], return_tensors='pt',trust_remote_code=True)
             if tmp.input_ids.shape[1] >= seqlen:
                 break
         i = random.randint(0, tmp.input_ids.shape[1] - seqlen - 1)
@@ -86,7 +86,7 @@ def get_c4(tokenizer, train_size, val_size, seed, seqlen, test_only):
     for _ in range(train_size):
         while True:
             i = random.randint(0, int(len(traindata)*val_sample_ratio) - 1)
-            trainenc = tokenizer(traindata[i]['text'], return_tensors='pt')
+            trainenc = tokenizer(traindata[i]['text'], return_tensors='pt', trust_remote_code=True)
             if trainenc.input_ids.shape[1] >= seqlen+1:
                 break
         i = random.randint(0, trainenc.input_ids.shape[1] - seqlen - 1)
@@ -100,7 +100,7 @@ def get_c4(tokenizer, train_size, val_size, seed, seqlen, test_only):
     for _ in range(val_size):
         while True:
             i = random.randint(int(len(traindata)*val_sample_ratio),len(traindata)-1)
-            trainenc = tokenizer(traindata[i]['text'], return_tensors='pt')
+            trainenc = tokenizer(traindata[i]['text'], return_tensors='pt',trust_remote_code=True)
             if trainenc.input_ids.shape[1] >= seqlen+1:
                 break
         i = random.randint(0, trainenc.input_ids.shape[1] - seqlen - 1)
@@ -128,7 +128,7 @@ def get_redpajama(tokenizer, train_size, val_size, seed, seqlen):
     for _ in range(train_size):
         while True:
             i = random.randint(0, int(len(traindata)*val_sample_ratio) - 1)
-            trainenc = tokenizer(traindata[i]['text'], return_tensors='pt')
+            trainenc = tokenizer(traindata[i]['text'], return_tensors='pt',trust_remote_code=True)
             if trainenc.input_ids.shape[1] >= seqlen+1:
                 break
         i = random.randint(0, trainenc.input_ids.shape[1] - seqlen - 1)
@@ -142,7 +142,7 @@ def get_redpajama(tokenizer, train_size, val_size, seed, seqlen):
     for _ in range(val_size):
         while True:
             i = random.randint(int(len(traindata)*val_sample_ratio),len(traindata)-1)
-            trainenc = tokenizer(traindata[i]['text'], return_tensors='pt')
+            trainenc = tokenizer(traindata[i]['text'], return_tensors='pt',trust_remote_code=True)
             if trainenc.input_ids.shape[1] >= seqlen+1:
                 break
         i = random.randint(0, trainenc.input_ids.shape[1] - seqlen - 1)
@@ -154,6 +154,45 @@ def get_redpajama(tokenizer, train_size, val_size, seed, seqlen):
     return trainloader, valloader
 
 
+def get_generated(tokenizer, train_size, val_size, seed, seqlen):
+    print("get_generated")
+    try:
+        train = "/auto/worka/ereddy/lab/aakash/LLM-QAT/gen_data/all_gen.jsonl"
+        traindata = load_dataset("json", data_files= str(train),split="train")
+    except:
+        traindata = load_dataset("json", data_files= str(train),split="train")
+    random.seed(seed)
+    traindata = traindata.shuffle(seed=seed) 
+    trainloader = []
+    val_sample_ratio = 0.9
+    for _ in range(train_size):
+        while True:
+            i = random.randint(0, int(len(traindata)*val_sample_ratio) - 1)
+            trainenc = tokenizer(traindata[i]['text'], return_tensors='pt',trust_remote_code=True)
+            if trainenc.input_ids.shape[1] >= seqlen+1:
+                break
+        i = random.randint(0, trainenc.input_ids.shape[1] - seqlen - 1)
+        j = i + seqlen
+        inp = trainenc.input_ids[:, i:j]
+        tar = inp.clone()
+        tar[:, :-1] = -100
+        trainloader.append((inp, tar))
+
+    valloader = []
+    for _ in range(val_size):
+        while True:
+            i = random.randint(int(len(traindata)*val_sample_ratio),len(traindata)-1)
+            trainenc = tokenizer(traindata[i]['text'], return_tensors='pt',trust_remote_code=True)
+            if trainenc.input_ids.shape[1] >= seqlen+1:
+                break
+        i = random.randint(0, trainenc.input_ids.shape[1] - seqlen - 1)
+        j = i + seqlen
+        inp = trainenc.input_ids[:, i:j]
+        tar = inp.clone()
+        tar[:, :-1] = -100
+        valloader.append((inp, tar))
+    return trainloader, valloader
+
 
 def get_loaders(
     name, tokenizer, train_size=128, val_size=64,seed=0, seqlen=2048, test_only=False
@@ -164,6 +203,8 @@ def get_loaders(
         return get_c4(tokenizer,train_size,val_size,seed,seqlen,test_only)
     elif 'redpajama' in name:
         return get_redpajama(tokenizer,train_size,val_size,seed,seqlen)
+    elif 'generated' in name:
+        return get_generated(tokenizer,train_size,val_size,seed,seqlen)
     else:
         raise NotImplementedError
 

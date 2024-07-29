@@ -33,7 +33,7 @@ def evaluate(model, tokenizer, args, logger):
     results = {}
 
     if args.eval_ppl:
-        datasets = ["wikitext2", "c4"]
+        datasets = ["wikitext2"]
         ppl_results = test_ppl(model, tokenizer, datasets, args.ppl_seqlen)
         for dataset in ppl_results:
             logger.info(f'{dataset} perplexity: {ppl_results[dataset]:.2f}')
@@ -43,12 +43,12 @@ def evaluate(model, tokenizer, args, logger):
         from lm_eval.models.huggingface import HFLM
         from lm_eval.utils import make_table
         task_list = args.eval_tasks.split(',')
-        model = HFLM(pretrained=model, batch_size=args.eval_batch_size)
+        model = HFLM(pretrained=model, batch_size=2)
         task_manager = lm_eval.tasks.TaskManager()
         results = lm_eval.simple_evaluate(
         model=model,
         tasks=task_list,
-        num_fewshot=0,
+        num_fewshot=5,
         task_manager=task_manager,
         )
         logger.info(make_table(results))
@@ -71,12 +71,12 @@ def main():
                         help="use real quantization instead of fake quantization, can reduce memory footprint")
     parser.add_argument("--resume_quant", type=str, default=None,  help="model path of resumed quantized model")
     parser.add_argument("--calib_dataset",type=str,default="redpajama",
-        choices=["wikitext2", "ptb", "c4", "mix", "redpajama"],
+        choices=["wikitext2", "ptb", "c4", "mix", "redpajama","generated"],
         help="Where to extract calibration data from.")
     parser.add_argument("--train_size", type=int, default=4096, help="Number of training data samples.")
     parser.add_argument("--val_size", type=int, default=64, help="Number of validation data samples.")
     parser.add_argument("--training_seqlen", type=int, default=2048, help="lenth of the training sequence.")
-    parser.add_argument("--batch_size", type=int, default=2, help="batch size.")
+    parser.add_argument("--batch_size", type=int, default=1, help="batch size.")
     parser.add_argument("--epochs", type=int, default=2)
     parser.add_argument("--num_workers", type=int, default=2,help="multi porcess to load data")
     parser.add_argument("--prefetch_factor", type=int, default=None,help="Number of batches loaded in advance by each worker")
@@ -96,7 +96,7 @@ def main():
     parser.add_argument("--max_memory", type=str, default="80GiB",help="The maximum memory of each GPU")
     parser.add_argument("--early_stop", type=int, default=0,help="early stoping after validation loss do not decrease")
     parser.add_argument("--off_load_to_disk", action="store_true", default=False, help="save training dataset to disk, saving CPU memory but may reduce training speed")
-
+    parser.add_argument("--lm_head", action="store_true", default=False, help="quantize only lm_head")
 
     args = parser.parse_args()
     random.seed(args.seed)
@@ -127,7 +127,7 @@ def main():
     else:
         # load fp quantized model
         config = AutoConfig.from_pretrained(args.model)
-        tokenizer = AutoTokenizer.from_pretrained(args.model, use_fast=False,legacy=False)
+        tokenizer = AutoTokenizer.from_pretrained(args.model, use_fast=False,legacy=False,trust_remote_code=True)
         model = AutoModelForCausalLM.from_pretrained(args.model, config=config, device_map='cpu',torch_dtype=torch.float16)
         for param in model.parameters():
             param.requires_grad = False

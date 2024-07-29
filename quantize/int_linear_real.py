@@ -171,7 +171,7 @@ def load_quantized_model(model_path, wbits, group_size):
     print(f"Loading quantized model from {model_path}")
 
     # import pdb;pdb.set_trace()
-    tokenizer = AutoTokenizer.from_pretrained(model_path, use_fast=False)
+    tokenizer = AutoTokenizer.from_pretrained(model_path, use_fast=False,trust_remote_code=True)
     config = AutoConfig.from_pretrained(model_path)
     with init_empty_weights():
         model = AutoModelForCausalLM.from_config(config=config,torch_dtype=torch.float16, trust_remote_code=True)
@@ -179,8 +179,9 @@ def load_quantized_model(model_path, wbits, group_size):
     for i in tqdm(range(len(layers))):
         layer = layers[i]
         named_linears = get_named_linears(layer, torch.nn.Linear)
+        w_bits = 2 if i in [22,23,24,25,26,27] else 3
         for name, module in named_linears.items():
-            q_linear = QuantLinear(wbits, group_size, module.in_features,module.out_features,not module.bias is None)
+            q_linear = QuantLinear(w_bits, group_size, module.in_features,module.out_features,not module.bias is None)
             q_linear.to(next(layer.parameters()).device)
             set_op_by_name(layer, name, q_linear)
     torch.cuda.empty_cache()

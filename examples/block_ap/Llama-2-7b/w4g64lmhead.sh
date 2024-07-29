@@ -1,0 +1,15 @@
+python3  main_block_ap.py \
+--model /auto/regrt/sw/dgundimeda/EfficientQAT/qwen_1_0_base_int3_g64_int2_g64_effqat_blockap   \
+--output_dir ./output/block_ap_log/qwen_1_0_base_int3_g64_int2_g64_effqat_blockap_lmhead_w4g64 \
+--net Llama-2 \
+--wbits 4 \
+--group_size 64 \
+--train_size 4 \
+--val_size 4 \
+--quant_lr 1e-4 \
+--weight_lr 1e-5 \
+--real_quant \
+--eval_ppl \
+--eval_tasks ceval-valid \
+--save_quant_dir ./output/block_ap_models/qwen_1_0_base_int3_g64_int2_g64_effqat_blockap_lmhead_w4g64 \
+--lm_head

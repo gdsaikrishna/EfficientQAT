@@ -58,19 +58,19 @@ class UniformAffineQuantizer(nn.Module):
     def fake_quant(self, x):
         scale = clamp_ste(self.scale,1e-4, 1e4)
         round_zero_point = clamp_ste(round_ste(self.zero_point), self.qmin, self.qmax)
-        
         dim1, dim2 = x.shape
         x = x.reshape(-1, self.group_size)
-        x_int = round_ste(x / scale)
+        x_int = round_ste(x / scale) # using 8 gb
         if round_zero_point is not None:
             x_int = x_int.add(round_zero_point)
         x_int = x_int.clamp(self.qmin, self.qmax)
         x_dequant = x_int
         if round_zero_point is not None:
             x_dequant = x_dequant.sub(round_zero_point)
-        x_dequant = x_dequant.mul(scale)
+        x_dequant = x_dequant.mul(scale) # using 2 gb
         if self.group_size:
             x_dequant = x_dequant.reshape(dim1, dim2)
+        # del x_int, x
         return x_dequant
     
 

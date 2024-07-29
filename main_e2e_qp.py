@@ -57,7 +57,7 @@ if torch.cuda.is_available():
 
 
 IGNORE_INDEX = -100
-DEFAULT_PAD_TOKEN = "[PAD]"
+DEFAULT_PAD_TOKEN = "<|endoftext|>"
 
 @dataclass
 class ModelArguments:
@@ -402,7 +402,7 @@ def train():
         print('Detected that training was already completed!')
 
     model, tokenizer = get_accelerate_model(args, checkpoint_dir)
-
+    breakpoint()
     model.config.use_cache = False
     print('loaded model')
     set_seed(args.seed)
@@ -500,12 +500,12 @@ def train():
 
     if args.eval_tasks != "":
         task_list = args.eval_tasks.split(',')
-        lm_eval_model = HFLM(pretrained=model, batch_size=32)
+        lm_eval_model = HFLM(pretrained=model, batch_size=2)
         task_manager = lm_eval.tasks.TaskManager()
         results = lm_eval.simple_evaluate( # call simple_evaluate
         model=lm_eval_model,
         tasks=task_list,
-        num_fewshot=0,
+        num_fewshot=5,
         task_manager=task_manager,
         )
         logger.info(make_table(results))
@@ -515,12 +515,12 @@ def train():
         logger.info(f'Average Acc: {total_acc/len(task_list)*100:.2f}%')
 
     if args.do_mmlu_eval:
-        lm_eval_model = HFLM(pretrained=model, batch_size=16)
+        lm_eval_model = HFLM(pretrained=model, batch_size=8)
         task_manager = lm_eval.tasks.TaskManager()
         results = lm_eval.simple_evaluate( # call simple_evaluate
         model=lm_eval_model,
         tasks=['mmlu'],
-        num_fewshot=5,
+        num_fewshot=0,
         task_manager=task_manager,
         cache_requests=True,
         )

@@ -128,7 +128,7 @@ def make_data_module(tokenizer: transformers.PreTrainedTokenizer, args) -> Dict:
             return dataset
         elif dataset_name == 'redpajama':
             try:
-                loacal_dataset = "/cpfs01/user/chenmengzhao/huggingface/datasets/togethercomputer___red_pajama-data-1_t-sample"
+                loacal_dataset = "/users/dgundimeda/.cache/huggingface/datasets/togethercomputer___red_pajama-data-1_t-sample"
                 dataset = load_dataset(loacal_dataset)
             except:
                 dataset = load_dataset("togethercomputer/RedPajama-Data-1T-Sample")   

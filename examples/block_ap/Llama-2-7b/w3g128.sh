@@ -1,5 +1,5 @@
 CUDA_VISIBLE_DEVICES=0 python main_block_ap.py \
---model path/to/Llama-2-7b  \
+--model /auto/regrt/sw/dgundimeda/qwen_models/qwen1_to_qwen2llama   \
 --output_dir ./output/block_ap_log/Llama-2-7b-w3g128 \
 --net Llama-2 \
 --wbits 3 \
