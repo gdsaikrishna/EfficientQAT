@@ -1,0 +1,77 @@
+platform_target: "Ara2"
+is_converted: true
+context_size: 1024
+layer {
+  name: "input_ids_embedded"
+  type: "Input"
+  top: "input_ids_embedded"
+  base_type: "Input"
+  estimator_group: "Input"
+  input_param {
+    shape {
+      dim: 1
+      dim: 1
+      dim: {{tkn}}
+      dim: 4096
+    }
+    layout: "NCHW"
+  }
+}
+layer {
+  name: "_model_norm_Mul_1"
+  type: "Ara2LayerNorm"
+  bottom: "input_ids_embedded"
+  top: "_model_norm_Mul_1"
+  base_type: "LayerNorm"
+  estimator_group: "LayerNorm"
+  layer_norm_param {
+    axis: 3
+    eps: 1e-06
+    output_mean_var: false
+    uses_mean: false
+  }
+}
+layer {
+  name: "_model_layers_{{idx}}_residue_perm_4"
+  type: "Ara2PermuteNnp"
+  bottom: "_model_norm_Mul_1"
+  top: "_model_layers_{{idx}}_residue_perm_4"
+  base_type: "PermuteNnp"
+  estimator_group: "PermuteNnp"
+  permute_nnp_param {
+    order: 0
+    order: 1
+    order: 3
+    order: 2
+  }
+}
+layer {
+  name: "_model_layers_{{idx}}_residue_rshp_4"
+  type: "Ara2Reshape"
+  bottom: "_model_layers_{{idx}}_residue_perm_4"
+  top: "_model_layers_{{idx}}_residue_rshp_4"
+  base_type: "Reshape"
+  estimator_group: "Reshape"
+  reshape_param {
+    shape {
+      dim: 1
+      dim: 4096
+      dim: 1
+      dim: {{tkn}}
+    }
+  }
+}
+layer {
+  name: "_lm_head_MatMul_ara_inrp"
+  type: "Ara2Convolution"
+  bottom: "_model_layers_{{idx}}_residue_rshp_4"
+  top: "_lm_head_MatMul_ara_inrp"
+  base_type: "Convolution"
+  estimator_group: "Convolution"
+  convolution_param {
+    num_output: 151936
+    bias_term: false
+    kernel_size: 1
+    kernel_size: 1
+  }
+}

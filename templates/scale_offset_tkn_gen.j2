@@ -1,0 +1,35 @@
+LayerType:
+  InnerProduct:
+    weightPrecision: INT{{val}}
+    groupSize: 64
+LayerNames:
+  _model_layers_{{idx}}_mlp_Mul:
+    outputDataPrecision:
+    - _model_layers_{{idx}}_mlp_Mul: INT16
+  _model_layers_{{idx}}_self_attn_rshp_Softmax:
+    outputDataPrecision:
+    - _model_layers_{{idx}}_self_attn_rshp_Softmax: INT16
+  input_ids_embedded:
+    outputDataPrecision:
+    - input_ids_embedded: INT16
+  valid_till:
+    outputDataPrecision:
+      - valid_till: UINT16
+  _model_layers_{{idx}}_self_attn_Softmax:
+    outputDataPrecision:
+      - _model_layers_{{idx}}_self_attn_Softmax: INT16
+  _model_layers_{{idx}}_self_attn_o_proj_MatMul_ara_inrp: 
+    outputDataPrecision:
+      - _model_layers_{{idx}}_self_attn_o_proj_MatMul_ara_inrp: INT16 
+  _model_layers_{{idx}}_mlp_down_proj_MatMul_ara_inrp: 
+    outputDataPrecision:
+      - _model_layers_{{idx}}_mlp_down_proj_MatMul_ara_inrp: INT16 
+    weightPrecision:
+      - _model_layers_{{idx}}_mlp_down_proj_MatMul_ara_inrp: INT4
+    groupSize: 64
+  _model_layers_{{idx}}_Add: 
+    outputDataPrecision:
+      - _model_layers_{{idx}}_Add: INT16 
+  _model_layers_{{idx}}_Add_1:
+    outputDataPrecision:
+      - _model_layers_{{idx}}_Add_1: INT16

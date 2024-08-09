@@ -8,5 +8,5 @@ venv
 env_efficientqat
 dist
 output
-qwen*
+qwen_test*
 *.pt

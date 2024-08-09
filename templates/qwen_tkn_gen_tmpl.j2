@@ -1,0 +1,640 @@
+platform_target: "Ara2"
+is_converted: true
+context_size: {{cntx}}
+layer {
+  name: "past_values_{{idx}}"
+  type: "Input"
+  top: "past_values_{{idx}}"
+  base_type: "Input"
+  estimator_group: "Input"
+  input_param {
+    shape {
+      dim: 1
+      dim: 1
+      dim: {{cntx}}
+      dim: 4096
+    }
+    layout: "NCHW"
+  }
+  isValueInput: {{idx}}
+}
+layer {
+  name: "_model_layers_{{idx}}_self_attn_Transpose_pv"
+  type: "Ara2PermuteNnp"
+  bottom: "past_values_{{idx}}"
+  top: "_model_layers_{{idx}}_self_attn_Transpose_pv"
+  base_type: "PermuteNnp"
+  estimator_group: "PermuteNnp"
+  permute_nnp_param {
+    order: 0
+    order: 1
+    order: 3
+    order: 2
+  }
+}
+layer {
+  name: "_model_layers_{{idx}}_self_attn_Reshape_2"
+  type: "Ara2Reshape"
+  bottom: "_model_layers_{{idx}}_self_attn_Transpose_pv"
+  top: "_model_layers_{{idx}}_self_attn_Reshape_2"
+  base_type: "Reshape"
+  estimator_group: "Reshape"
+  reshape_param {
+    shape {
+      dim: 1
+      dim: 32
+      dim: 128
+      dim: {{cntx}}
+    }
+  }
+}
+layer {
+  name: "_model_layers_{{idx}}_self_attn_Transpose_2"
+  type: "Ara2PermuteNnp"
+  bottom: "_model_layers_{{idx}}_self_attn_Reshape_2"
+  top: "_model_layers_{{idx}}_self_attn_Transpose_2"
+  base_type: "PermuteNnp"
+  estimator_group: "PermuteNnp"
+  permute_nnp_param {
+    order: 0
+    order: 1
+    order: 3
+    order: 2
+  }
+}
+layer {
+  name: "past_keys_{{idx}}"
+  type: "Input"
+  top: "past_keys_{{idx}}"
+  base_type: "Input"
+  estimator_group: "Input"
+  input_param {
+    shape {
+      dim: 1
+      dim: 1
+      dim: {{cntx}}
+      dim: 4096
+    }
+    layout: "NCHW"
+  }
+  isKeyInput: {{idx}}
+}
+layer {
+  name: "_model_layers_{{idx}}_self_attn_Transpose_3"
+  type: "Ara2PermuteNnp"
+  bottom: "past_keys_{{idx}}"
+  top: "_model_layers_{{idx}}_self_attn_Transpose_3"
+  base_type: "PermuteNnp"
+  estimator_group: "PermuteNnp"
+  permute_nnp_param {
+    order: 0
+    order: 1
+    order: 3
+    order: 2
+  }
+}
+layer {
+  name: "_model_layers_{{idx}}_self_attn_2a_Transpose_3"
+  type: "Ara2Reshape"
+  bottom: "_model_layers_{{idx}}_self_attn_Transpose_3"
+  top: "_model_layers_{{idx}}_self_attn_2a_Transpose_3"
+  base_type: "Reshape"
+  estimator_group: "Reshape"
+  reshape_param {
+    shape {
+      dim: 1
+      dim: 32
+      dim: 128
+      dim: {{cntx}}
+    }
+  }
+}
+layer {
+  name: "position_ids_embedded"
+  type: "Input"
+  top: "position_ids_embedded"
+  base_type: "Input"
+  estimator_group: "Input"
+  input_param {
+    shape {
+      dim: 1
+      dim: 1
+      dim: 1
+      dim: 256
+    }
+    layout: "NCHW"
+  }
+  isRopeInput: true
+}
+layer {
+  name: "input_ids_embedded"
+  type: "Input"
+  top: "input_ids_embedded"
+  base_type: "Input"
+  estimator_group: "Input"
+  input_param {
+    shape {
+      dim: 1
+      dim: 1
+      dim: 1
+      dim: 4096
+    }
+    layout: "NCHW"
+  }
+}
+layer {
+  name: "valid_till"
+  type: "Input"
+  top: "valid_till"
+  base_type: "Input"
+  estimator_group: "Input"
+  input_param {
+    shape {
+      dim: 1
+      dim: 1
+      dim: 1
+      dim: 1
+    }
+    layout: "NCHW"
+  }
+}
+layer {
+  name: "_model_layers_{{idx}}_input_layernorm_Mul_1_ara_LayerNorm_0"
+  type: "Ara2LayerNorm"
+  bottom: "input_ids_embedded"
+  top: "_model_layers_{{idx}}_input_layernorm_Mul_1_ara_LayerNorm_0"
+  base_type: "LayerNorm"
+  estimator_group: "LayerNorm"
+  layer_norm_param {
+    axis: 3
+    eps: 1e-06
+    output_mean_var: false
+    uses_mean: false
+  }
+}
+layer {
+  name: "_model_layers_{{idx}}_input_layernorm_Mul_1_ara_reshape_2"
+  type: "Ara2Reshape"
+  bottom: "_model_layers_{{idx}}_input_layernorm_Mul_1_ara_LayerNorm_0"
+  top: "_model_layers_{{idx}}_input_layernorm_Mul_1_ara_reshape_2"
+  base_type: "Reshape"
+  estimator_group: "Reshape"
+  reshape_param {
+    shape {
+      dim: 1
+      dim: 4096
+      dim: 1
+      dim: 1
+    }
+  }
+}
+layer {
+  name: "_model_layers_{{idx}}_self_attn_q_proj_MatMul"
+  type: "Ara2InnerProduct"
+  bottom: "_model_layers_{{idx}}_input_layernorm_Mul_1_ara_reshape_2"
+  top: "_model_layers_{{idx}}_self_attn_q_proj_MatMul"
+  base_type: "InnerProduct"
+  estimator_group: "InnerProduct"
+  inner_product_param {
+    num_output: 4096
+    bias_term: false
+  }
+}
+layer {
+  name: "_model_layers_{{idx}}_self_attn_q_proj_Add_original_bnorm"
+  type: "Ara2BatchNorm"
+  bottom: "_model_layers_{{idx}}_self_attn_q_proj_MatMul"
+  top: "_model_layers_{{idx}}_self_attn_q_proj_Add_original_bnorm"
+  base_type: "BatchNorm"
+  estimator_group: "BatchNorm"
+  batch_norm_param {
+    use_global_stats: true
+    eps: 0.0
+  }
+}
+layer {
+  name: "_model_layers_{{idx}}_self_attn_q_proj_Add_original"
+  type: "Ara2Scale"
+  bottom: "_model_layers_{{idx}}_self_attn_q_proj_Add_original_bnorm"
+  top: "_model_layers_{{idx}}_self_attn_q_proj_Add_original"
+  base_type: "Scale"
+  estimator_group: "Scale"
+  scale_param {
+    axis: 1
+    bias_term: true
+  }
+}
+layer {
+  name: "_model_layers_{{idx}}_self_attn_Reshape"
+  type: "Ara2Reshape"
+  bottom: "_model_layers_{{idx}}_self_attn_q_proj_Add_original"
+  top: "_model_layers_{{idx}}_self_attn_Reshape"
+  base_type: "Reshape"
+  estimator_group: "Reshape"
+  reshape_param {
+    shape {
+      dim: 1
+      dim: 32
+      dim: 1
+      dim: 128
+    }
+  }
+}
+layer {
+  name: "_model_layers_{{idx}}_self_attn_Add"
+  type: "Ara2Eltwise"
+  bottom: "_model_layers_{{idx}}_self_attn_Reshape"
+  bottom: "position_ids_embedded"
+  top: "_model_layers_{{idx}}_self_attn_Add"
+  base_type: "Eltwise"
+  estimator_group: "Eltwise"
+  eltwise_param {
+    operation: ROPE
+    broadcast1: 0.0
+    broadcast1: 1.0
+    broadcast1: 0.0
+    broadcast1: 0.5
+  }
+}
+layer {
+  name: "_model_layers_{{idx}}_self_attn_MatMul_ara_permute_nnp_0"
+  type: "Ara2Reshape"
+  bottom: "_model_layers_{{idx}}_self_attn_Add"
+  top: "_model_layers_{{idx}}_self_attn_MatMul_ara_permute_nnp_0"
+  base_type: "Reshape"
+  estimator_group: "Reshape"
+  reshape_param {
+    shape {
+      dim: 1
+      dim: 32
+      dim: 128
+      dim: 1
+    }
+  }
+}
+layer {
+  name: "_model_layers_{{idx}}_self_attn_k_proj_MatMul"
+  type: "Ara2InnerProduct"
+  bottom: "_model_layers_{{idx}}_input_layernorm_Mul_1_ara_reshape_2"
+  top: "_model_layers_{{idx}}_self_attn_k_proj_MatMul"
+  base_type: "InnerProduct"
+  estimator_group: "InnerProduct"
+  inner_product_param {
+    num_output: 4096
+    bias_term: false
+  }
+}
+layer {
+  name: "_model_layers_{{idx}}_self_attn_k_proj_Add_original_bnorm"
+  type: "Ara2BatchNorm"
+  bottom: "_model_layers_{{idx}}_self_attn_k_proj_MatMul"
+  top: "_model_layers_{{idx}}_self_attn_k_proj_Add_original_bnorm"
+  base_type: "BatchNorm"
+  estimator_group: "BatchNorm"
+  batch_norm_param {
+    use_global_stats: true
+    eps: 0.0
+  }
+}
+layer {
+  name: "_model_layers_{{idx}}_self_attn_k_proj_Add_original"
+  type: "Ara2Scale"
+  bottom: "_model_layers_{{idx}}_self_attn_k_proj_Add_original_bnorm"
+  top: "_model_layers_{{idx}}_self_attn_k_proj_Add_original"
+  base_type: "Scale"
+  estimator_group: "Scale"
+  scale_param {
+    axis: 1
+    bias_term: true
+  }
+}
+layer {
+  name: "_model_layers_{{idx}}_self_attn_Reshape_1"
+  type: "Ara2Reshape"
+  bottom: "_model_layers_{{idx}}_self_attn_k_proj_Add_original"
+  top: "_model_layers_{{idx}}_self_attn_Reshape_1"
+  base_type: "Reshape"
+  estimator_group: "Reshape"
+  reshape_param {
+    shape {
+      dim: 1
+      dim: 32
+      dim: 1
+      dim: 128
+    }
+  }
+}
+layer {
+  name: "_model_layers_{{idx}}_self_attn_Add_1"
+  type: "Ara2Eltwise"
+  bottom: "_model_layers_{{idx}}_self_attn_Reshape_1"
+  bottom: "position_ids_embedded"
+  top: "_model_layers_{{idx}}_self_attn_Add_1"
+  base_type: "Eltwise"
+  estimator_group: "Eltwise"
+  eltwise_param {
+    operation: ROPE
+    broadcast1: 0.0
+    broadcast1: 1.0
+    broadcast1: 0.0
+    broadcast1: 0.5
+  }
+  isKeyOutput: {{idx}}
+}
+layer {
+  name: "_model_layers_{{idx}}_self_attn_v_proj_MatMul"
+  type: "Ara2InnerProduct"
+  bottom: "_model_layers_{{idx}}_input_layernorm_Mul_1_ara_reshape_2"
+  top: "_model_layers_{{idx}}_self_attn_v_proj_MatMul"
+  base_type: "InnerProduct"
+  estimator_group: "InnerProduct"
+  inner_product_param {
+    num_output: 4096
+    bias_term: false
+  }
+  isValueOutput: {{idx}}
+}
+layer {
+  name: "_model_layers_{{idx}}_self_attn_v_proj_Add_original_bnorm"
+  type: "Ara2BatchNorm"
+  bottom: "_model_layers_{{idx}}_self_attn_v_proj_MatMul"
+  top: "_model_layers_{{idx}}_self_attn_v_proj_Add_original_bnorm"
+  base_type: "BatchNorm"
+  estimator_group: "BatchNorm"
+  batch_norm_param {
+    use_global_stats: true
+    eps: 0.0
+  }
+}
+layer {
+  name: "_model_layers_{{idx}}_self_attn_v_proj_Add_original"
+  type: "Ara2Scale"
+  bottom: "_model_layers_{{idx}}_self_attn_v_proj_Add_original_bnorm"
+  top: "_model_layers_{{idx}}_self_attn_v_proj_Add_original"
+  base_type: "Scale"
+  estimator_group: "Scale"
+  scale_param {
+    axis: 1
+    bias_term: true
+  }
+}
+layer {
+  name: "_model_layers_{{idx}}_self_attn_MatMul"
+  type: "Ara2BatchDot"
+  bottom: "_model_layers_{{idx}}_self_attn_2a_Transpose_3"
+  bottom: "_model_layers_{{idx}}_self_attn_MatMul_ara_permute_nnp_0"
+  top: "_model_layers_{{idx}}_self_attn_MatMul"
+  base_type: "BatchDot"
+  estimator_group: "BatchDot"
+  batch_dot_param {
+    transpose_a: 1
+    transpose_b: 0
+    multiplier: 0.08838834916
+  }
+}
+layer {
+  name: "_model_layers_{{idx}}_self_attn_Div_rshp"
+  type: "Ara2Reshape"
+  bottom: "_model_layers_{{idx}}_self_attn_MatMul"
+  top: "_model_layers_{{idx}}_self_attn_Div_rshp"
+  base_type: "Reshape"
+  estimator_group: "Reshape"
+  reshape_param {
+    shape {
+      dim: 1
+      dim: 32
+      dim: 1
+      dim: {{cntx}}
+    }
+  }
+}
+layer {
+  name: "_model_layers_{{idx}}_self_attn_Softmax"
+  type: "Ara2AttentionSoftmax"
+  bottom: "_model_layers_{{idx}}_self_attn_Div_rshp"
+  bottom: "valid_till"
+  top: "_model_layers_{{idx}}_self_attn_Softmax"
+  base_type: "AttentionSoftmax"
+  estimator_group: "AttentionSoftmax"
+  attentionsoftmax_param {
+    axis: 3
+  }
+}
+layer {
+  name: "_model_layers_{{idx}}_self_attn_rshp_Softmax"
+  type: "Ara2Reshape"
+  bottom: "_model_layers_{{idx}}_self_attn_Softmax"
+  top: "_model_layers_{{idx}}_self_attn_rshp_Softmax"
+  base_type: "Reshape"
+  estimator_group: "Reshape"
+  reshape_param {
+    shape {
+      dim: 1
+      dim: 32
+      dim: {{cntx}}
+      dim: 1
+    }
+  }
+}
+layer {
+  name: "_model_layers_{{idx}}_self_attn_MatMul_1"
+  type: "Ara2BatchDot"
+  bottom: "_model_layers_{{idx}}_self_attn_Transpose_2"
+  bottom: "_model_layers_{{idx}}_self_attn_rshp_Softmax"
+  top: "_model_layers_{{idx}}_self_attn_MatMul_1"
+  base_type: "BatchDot"
+  estimator_group: "BatchDot"
+  batch_dot_param {
+    transpose_a: 1
+    transpose_b: 0
+  }
+}
+layer {
+  name: "_model_layers_{{idx}}_post_attention_layernorm_Mul_1_ara_reshape_0"
+  type: "Ara2Reshape"
+  bottom: "_model_layers_{{idx}}_self_attn_MatMul_1"
+  top: "_model_layers_{{idx}}_post_attention_layernorm_Mul_1_ara_reshape_0"
+  base_type: "Reshape"
+  estimator_group: "Reshape"
+  reshape_param {
+    shape {
+      dim: 1
+      dim: 4096
+      dim: 1
+      dim: 1
+    }
+  }
+}
+layer {
+  name: "_model_layers_{{idx}}_self_attn_o_proj_MatMul_ara_inrp"
+  type: "Ara2InnerProduct"
+  bottom: "_model_layers_{{idx}}_post_attention_layernorm_Mul_1_ara_reshape_0"
+  top: "_model_layers_{{idx}}_self_attn_o_proj_MatMul_ara_inrp"
+  base_type: "InnerProduct"
+  estimator_group: "InnerProduct"
+  inner_product_param {
+    num_output: 4096
+    bias_term: false
+  }
+}
+layer {
+  name: "_model_layers_{{idx}}_self_attn_o_proj_MatMul"
+  type: "Ara2Reshape"
+  bottom: "_model_layers_{{idx}}_self_attn_o_proj_MatMul_ara_inrp"
+  top: "_model_layers_{{idx}}_self_attn_o_proj_MatMul"
+  base_type: "Reshape"
+  estimator_group: "Reshape"
+  reshape_param {
+    shape {
+      dim: 1
+      dim: 1
+      dim: 1
+      dim: 4096
+    }
+  }
+}
+layer {
+  name: "_model_layers_{{idx}}_Add"
+  type: "Ara2Eltwise"
+  bottom: "_model_layers_{{idx}}_self_attn_o_proj_MatMul"
+  bottom: "input_ids_embedded"
+  top: "_model_layers_{{idx}}_Add"
+  base_type: "Eltwise"
+  estimator_group: "Eltwise"
+  eltwise_param {
+    operation: SUM
+    broadcast0: 0.0
+    broadcast0: 0.0
+    broadcast0: 0.0
+    broadcast1: 0.0
+    broadcast1: 0.0
+    broadcast1: 0.0
+  }
+}
+layer {
+  name: "_model_layers_{{idx}}_post_attention_layernorm_Mul_1_ara_LayerNorm_0"
+  type: "Ara2LayerNorm"
+  bottom: "_model_layers_{{idx}}_Add"
+  top: "_model_layers_{{idx}}_post_attention_layernorm_Mul_1_ara_LayerNorm_0"
+  base_type: "LayerNorm"
+  estimator_group: "LayerNorm"
+  layer_norm_param {
+    axis: 3
+    eps: 1e-06
+    output_mean_var: false
+    uses_mean: false
+  }
+}
+layer {
+  name: "_model_layers_{{idx}}_post_attention_layernorm_Mul_1"
+  type: "Ara2Reshape"
+  bottom: "_model_layers_{{idx}}_post_attention_layernorm_Mul_1_ara_LayerNorm_0"
+  top: "_model_layers_{{idx}}_post_attention_layernorm_Mul_1"
+  base_type: "Reshape"
+  estimator_group: "Reshape"
+  reshape_param {
+    shape {
+      dim: 1
+      dim: 4096
+      dim: 1
+      dim: 1
+    }
+  }
+}
+layer {
+  name: "_model_layers_{{idx}}_mlp_up_proj_MatMul_ara_inrp"
+  type: "Ara2InnerProduct"
+  bottom: "_model_layers_{{idx}}_post_attention_layernorm_Mul_1"
+  top: "_model_layers_{{idx}}_mlp_up_proj_MatMul_ara_inrp"
+  base_type: "InnerProduct"
+  estimator_group: "InnerProduct"
+  inner_product_param {
+    num_output: 11008
+    bias_term: false
+  }
+}
+layer {
+  name: "_model_layers_{{idx}}_mlp_gate_proj_MatMul_ara_inrp"
+  type: "Ara2InnerProduct"
+  bottom: "_model_layers_{{idx}}_post_attention_layernorm_Mul_1"
+  top: "_model_layers_{{idx}}_mlp_gate_proj_MatMul_ara_inrp"
+  base_type: "InnerProduct"
+  estimator_group: "InnerProduct"
+  inner_product_param {
+    num_output: 11008
+    bias_term: false
+  }
+}
+layer {
+  name: "_model_layers_{{idx}}_mlp_act_fn_Mul"
+  type: "Ara2Swish"
+  bottom: "_model_layers_{{idx}}_mlp_gate_proj_MatMul_ara_inrp"
+  top: "_model_layers_{{idx}}_mlp_act_fn_Mul"
+  base_type: "Swish"
+  estimator_group: "activation"
+}
+layer {
+  name: "_model_layers_{{idx}}_mlp_Mul"
+  type: "Ara2Eltwise"
+  bottom: "_model_layers_{{idx}}_mlp_up_proj_MatMul_ara_inrp"
+  bottom: "_model_layers_{{idx}}_mlp_act_fn_Mul"
+  top: "_model_layers_{{idx}}_mlp_Mul"
+  base_type: "Eltwise"
+  estimator_group: "Eltwise"
+  eltwise_param {
+    operation: PROD
+    broadcast0: 0.0
+    broadcast0: 0.0
+    broadcast0: 0.0
+    broadcast1: 0.0
+    broadcast1: 0.0
+    broadcast1: 0.0
+  }
+}
+layer {
+  name: "_model_layers_{{idx}}_mlp_down_proj_MatMul_ara_inrp"
+  type: "Ara2InnerProduct"
+  bottom: "_model_layers_{{idx}}_mlp_Mul"
+  top: "_model_layers_{{idx}}_mlp_down_proj_MatMul_ara_inrp"
+  base_type: "InnerProduct"
+  estimator_group: "InnerProduct"
+  inner_product_param {
+    num_output: 4096
+    bias_term: false
+  }
+}
+layer {
+  name: "_model_layers_{{idx}}_down_proj_reshape"
+  type: "Ara2Reshape"
+  bottom: "_model_layers_{{idx}}_mlp_down_proj_MatMul_ara_inrp"
+  top: "_model_layers_{{idx}}_down_proj_reshape"
+  base_type: "Reshape"
+  estimator_group: "Reshape"
+  reshape_param {
+    shape {
+      dim: 1
+      dim: 1
+      dim: 1
+      dim: 4096
+    }
+  }
+}
+layer {
+  name: "_model_layers_{{idx}}_Add_1"
+  type: "Ara2Eltwise"
+  bottom: "_model_layers_{{idx}}_Add"
+  bottom: "_model_layers_{{idx}}_down_proj_reshape"
+  top: "_model_layers_{{idx}}_Add_1"
+  base_type: "Eltwise"
+  estimator_group: "Eltwise"
+  eltwise_param {
+    operation: SUM
+    broadcast0: 0.0
+    broadcast0: 0.0
+    broadcast0: 0.0
+    broadcast1: 0.0
+    broadcast1: 0.0
+    broadcast1: 0.0
+  }
+  isOutput: true
+}
